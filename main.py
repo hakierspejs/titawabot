@@ -32,7 +32,7 @@ while True:
             break
 
 
-bot = telegram.Bot('1919010838:AAGIZOn-EW41-sgLWsibTGmqhyJe_bjpjC8')
+bot = telegram.Bot(open('api_key.txt').read().strip())
 while True:
     linia = wczytaj_linie(s)
     msg = linia.decode().strip()
