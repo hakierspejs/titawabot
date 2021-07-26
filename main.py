@@ -47,8 +47,8 @@ def main():
         msg = linia.decode().strip()
         czas = datetime.datetime.now()
         if (
-            czas.hour == 11
-            and czas.minute == 46
+            czas.hour == 8
+            and czas.minute == 0
             and czas.day != ostatnio_wyslano_propagacje
         ):
             ostatnio_wyslano_propagacje = czas.day
