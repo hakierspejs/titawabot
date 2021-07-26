@@ -54,7 +54,7 @@ def main():
     ostatnio_wyslano_propagacje = None
     while True:
         linia = wczytaj_linie(s)
-        msg = linia.decode().strip()
+        msg = linia.decode('utf8', 'ignore').strip()
         czas = datetime.datetime.now()
         if (
             czas.hour == 8
