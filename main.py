@@ -56,6 +56,7 @@ def main():
                 "http://www.hamqsl.com/solar101vhf.php",
                 headers={"User-Agent": "curl/7.68.0"},
             ).content
+            bot.send_message(chat_id=CHAT_ID, text="Dzień dobry, warunki na dziś:")
             bot.send_photo(chat_id=CHAT_ID, photo=io.BytesIO(content))
             time.sleep(5.0)
         if msg and "3565" in msg:
@@ -63,5 +64,5 @@ def main():
             time.sleep(5.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
