@@ -1,0 +1,5 @@
+version: '3.0'
+services:
+    titawa_bot:
+        build: .
+        restart: unless-stopped
