@@ -12,6 +12,9 @@ import requests
 
 
 CHAT_ID = -548484028
+WZORCE = [
+    "3565",
+]
 
 
 @atexit.register
@@ -66,7 +69,11 @@ def main():
             bot.send_message(chat_id=CHAT_ID, text="Dzień dobry, warunki na dziś:")
             bot.send_photo(chat_id=CHAT_ID, photo=io.BytesIO(content))
             time.sleep(5.0)
-        if msg and "3565" in msg:
+        znaleziono = False
+        for wzorzec in WZORCE:
+            if wzorzec in msg:
+                znaleziono = True
+        if msg and znaleziono:
             bot.send_message(chat_id=CHAT_ID, text=msg)
             time.sleep(5.0)
 
