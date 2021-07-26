@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import atexit
 import datetime
 import socket
 import time
@@ -11,6 +12,11 @@ import requests
 
 
 CHAT_ID = -548484028
+
+
+@atexit.register
+def odczekaj_minute_przed_wyjsciem(*args, **kwargs):
+    time.sleep(60.0)
 
 
 def wczytaj_linie(s):
@@ -37,6 +43,7 @@ def zaloguj_sie(s, login):
 
 
 def main():
+    time.sleep(10.0)
     s = socket.socket()
     s.connect(("ve7cc.net", 23))
     zaloguj_sie(s, "SP7KZK")
