@@ -5,14 +5,13 @@ import atexit
 import datetime
 import socket
 import time
-import sys
 import io
 
 import telegram
 import requests
 
 
-CHAT_ID = -548484028
+CHAT_ID = -1001510902119
 WZORCE = [
     "3565",
 ]
