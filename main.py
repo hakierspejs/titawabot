@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import atexit
 import datetime
 import socket
@@ -37,15 +38,17 @@ def zaloguj_sie(s, login):
         c = s.recv(1)
         buf += c
         if c == b"\n":
+            logging.debug('zaloguj_sie: odrzucam linię: %r', buf)
             buf = b""
         if c == b":":
             if buf == b"login:":
                 s.send(login.encode() + b"\r\n")
-                sys.stderr.write("Zalogowany...?\n")
+                logging.info('zaloguj_sie: zalogowany?', buf)
                 return
 
 
 def main():
+    logging.info('Bot się uruchamia, za 10s nawiąże połączenie...')
     time.sleep(10.0)
     s = socket.socket()
     s.connect(("ve7cc.net", 23))
@@ -61,6 +64,7 @@ def main():
             and czas.minute == 0
             and czas.day != ostatnio_wyslano_propagacje
         ):
+            logging.info('main(): publikuje propagacje...')
             ostatnio_wyslano_propagacje = czas.day
             content = requests.get(
                 "http://www.hamqsl.com/solar101vhf.php",
@@ -74,9 +78,13 @@ def main():
             if wzorzec in msg:
                 znaleziono = True
         if msg and znaleziono:
+            logging.info('main(): publikuje linie: %r', linia)
             bot.send_message(chat_id=CHAT_ID, text=msg)
             time.sleep(5.0)
+        else:
+            logging.info('main(): odrzucam linie: %r', linia)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level='DEBUG')
     main()
