@@ -50,7 +50,7 @@ def zaloguj_sie(s, login):
 def main():
     logging.info('Bot się uruchamia, za 10s nawiąże połączenie...')
     time.sleep(10.0)
-    signal.alarm(60 * 60 * 3)
+    signal.alarm(60 * 60)
     s = socket.socket()
     s.connect(("ve7cc.net", 23))
     zaloguj_sie(s, "SP7KZK")
