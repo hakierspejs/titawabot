@@ -43,7 +43,7 @@ def zaloguj_sie(s, login):
         if c == b":":
             if buf == b"login:":
                 s.send(login.encode() + b"\r\n")
-                logging.info('zaloguj_sie: zalogowany?', buf)
+                logging.info('zaloguj_sie: zalogowany?')
                 return
 
 
