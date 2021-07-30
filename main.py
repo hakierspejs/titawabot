@@ -59,9 +59,9 @@ def main():
     while True:
         linia = wczytaj_linie(s)
         msg = linia.decode('utf8', 'ignore').strip()
-        czas = datetime.datetime.now()
+        czas = datetime.datetime.utcnow()
         if (
-            czas.hour == 8
+            czas.hour == 6
             and czas.minute == 0
             and czas.day != ostatnio_wyslano_propagacje
         ):
