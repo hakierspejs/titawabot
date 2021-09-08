@@ -7,7 +7,6 @@ import socket
 import time
 import io
 import signal
-
 import telegram
 import requests
 
@@ -16,7 +15,8 @@ CHAT_ID = -1001510902119
 WZORCE = [
     "3565",
 ]
-
+LISTA_ZNAKOW = []
+czas_znaki = 0
 
 @atexit.register
 def odczekaj_minute_przed_wyjsciem(*args, **kwargs):
@@ -59,7 +59,11 @@ def main():
     while True:
         linia = wczytaj_linie(s)
         msg = linia.decode('utf8', 'ignore').strip()
+        msg_split = msg.split(" ")
+        znak_do_sprawdzenia = msg_split[4]
         czas = datetime.datetime.utcnow()
+        global czas_znaki
+        czas_znaki_now = time.time() - czas_znaki
         if (
             czas.hour == 6
             and czas.minute == 0
@@ -75,10 +79,21 @@ def main():
             bot.send_photo(chat_id=CHAT_ID, photo=io.BytesIO(content))
             time.sleep(5.0)
         znaleziono = False
+        znaleziono_znak = False     
+        for i in LISTA_ZNAKOW:                                                      #spawdż czy znak jest na liscie
+            if i in znak_do_sprawdzenia:
+                znaleziono_znak = True
+            else:
+                LISTA_ZNAKOW.insert(0,znak_do_sprawdzenia)
+        if len(LISTA_ZNAKOW) == 0:                                                   #jesli lista byla pusta dodaj znak 
+                LISTA_ZNAKOW.insert(0,znak_do_sprawdzenia)            
+        if czas_znaki_now > 1200 and len(LISTA_ZNAKOW) > 0:                         #po upływie 20 minut wyjmij najstarszy element 
+            LISTA_ZNAKOW.pop()
+            czas_znaki = time.time()
         for wzorzec in WZORCE:
             if wzorzec in msg:
                 znaleziono = True
-        if msg and znaleziono:
+        if msg and znaleziono and not znaleziono_znak:
             logging.info('main(): publikuje linie: %r', linia)
             bot.send_message(chat_id=CHAT_ID, text=msg)
             time.sleep(5.0)
