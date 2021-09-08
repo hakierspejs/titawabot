@@ -15,7 +15,7 @@ CHAT_ID = -1001510902119
 WZORCE = [
     "3565",
 ]
-LISTA_ZNAKOW = []
+lista_znakow = []
 czas_znaki = 0
 
 @atexit.register
@@ -80,15 +80,15 @@ def main():
             time.sleep(5.0)
         znaleziono = False
         znaleziono_znak = False     
-        for i in LISTA_ZNAKOW:                                                      #spawdż czy znak jest na liscie
+        for i in lista_znakow:                                                      #spawdż czy znak jest na liscie
             if i in znak_do_sprawdzenia:
                 znaleziono_znak = True
             else:
-                LISTA_ZNAKOW.insert(0,znak_do_sprawdzenia)
-        if len(LISTA_ZNAKOW) == 0:                                                   #jesli lista byla pusta dodaj znak 
-                LISTA_ZNAKOW.insert(0,znak_do_sprawdzenia)            
-        if czas_znaki_now > 1200 and len(LISTA_ZNAKOW) > 0:                         #po upływie 20 minut wyjmij najstarszy element 
-            LISTA_ZNAKOW.pop()
+                lista_znakow.insert(0,znak_do_sprawdzenia)
+        if len(lista_znakow) == 0:                                                   #jesli lista byla pusta dodaj znak 
+                lista_znakow.insert(0,znak_do_sprawdzenia)            
+        if czas_znaki_now > 1200 and len(lista_znakow) > 0:                         #po upływie 20 minut wyjmij najstarszy element 
+            lista_znakow.pop()
             czas_znaki = time.time()
         for wzorzec in WZORCE:
             if wzorzec in msg:
