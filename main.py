@@ -13,6 +13,7 @@ import requests
 
 
 CHAT_ID = -1001510902119
+CHAT_ID_2 = -1001781769718
 WZORCE = [
     "3565",
 ]
@@ -85,14 +86,25 @@ def main():
             ).content
             bot.send_message(chat_id=CHAT_ID, text="Dzień dobry, warunki na dziś:")
             bot.send_photo(chat_id=CHAT_ID, photo=io.BytesIO(content))
+
+            posortowane = sorted(znaki_statystyka.items(),key=lambda x:x[1],reverse=True)
+            slownik_posortowany = {}
+            for i in posortowane:
+                #print(i[0], i[1])
+                slownik_posortowany[i[0]] = i[1]
+            slownik_posortowany_usun_szum = {}
+            for i in slownik_posortowany:
+                if slownik_posortowany[i] > 30:
+                    slownik_posortowany_usun_szum[i] = slownik_posortowany[i]
             staty = ""
-            for x in znaki_statystyka:
-                statystyka = str(x) + " : " + str(znaki_statystyka[x]) + " razy" +"\n"
+            for x in slownik_posortowany_usun_szum:
+                statystyka = str(x) + " : " + str(slownik_posortowany_usun_szum[x]) + " razy" +"\n"
                 staty = staty + statystyka
             time.sleep(5)
-            bot.send_message(chat_id=CHAT_ID, text="Bot słyszał stacje w tym miesiącu:")
-            bot.send_message(chat_id=CHAT_ID, text=staty)
-            time.sleep(5.0)
+            if staty:
+                bot.send_message(chat_id=CHAT_ID, text="Bot słyszał stacje w tym miesiącu:")
+                bot.send_message(chat_id=CHAT_ID, text=staty)
+                time.sleep(5.0)
         znaleziono = False
         znaleziono_znak = False
         for wzorzec in WZORCE:
@@ -126,7 +138,7 @@ def main():
 
         if msg and znaleziono and znaleziono_znak:
             logging.info('main(): publikuje linie: %r', linia)
-            bot.send_message(chat_id=CHAT_ID, text=msg)
+            bot.send_message(chat_id=CHAT_ID_2, text=msg)
             time.sleep(5.0)
         #else:
         #    logging.info('main(): odrzucam linie: %r', linia)
