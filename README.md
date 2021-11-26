@@ -6,5 +6,5 @@ Raz dziennie przesyła też obrazek o aktualnej propacji z hamqsl.com oraz staty
 
 Todo : 
 1. telnet connection watchdog - czasem połączenie zawisza się 
-2. ststy d opliku - na wypadek restartu bota
+2. staty do opliku - na wypadek restartu bota - DONE
 
