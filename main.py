@@ -7,9 +7,10 @@ import socket
 import time
 import io
 import signal
-
+import ast
 import telegram
 import requests
+import os
 
 
 CHAT_ID = -1001510902119
@@ -19,11 +20,35 @@ WZORCE = [
 ]
 znaki_do_sprawdzenia = {}
 znaki_statystyka = {}
+plik_z_statystykami ="/tmp/slownik/slownik.txt"
 staty = ""
 @atexit.register
+
+def sprawdz_czy_plik_statystyk_istnieje(plik_do_sprawdzenia):
+    if os.path.isfile(plik_do_sprawdzenia):
+        logging.info('Plik istnieje')
+        pass
+    else:
+        logging.info('Plik nie istnieje, tworze !')
+        plik = open(plik_do_sprawdzenia, "w")
+        plik.write("{}")
+        plik.close()
+
+def zapisz_statystyke_do_pliku(slownik,plik):
+    with open(plik,"w") as file:
+      file.write(str(slownik))
+
+def odczytaj_statystyke_z_pliku(plik):
+    #slownik = {}
+    #zawartosc = ""
+    file = open(plik, "r")
+    zawartosc = file.read()
+    slownik = ast.literal_eval(zawartosc)
+    file.close()
+    return slownik
+
 def odczekaj_minute_przed_wyjsciem(*args, **kwargs):
     time.sleep(60.0)
-
 
 def wczytaj_linie(s):
     buf = b""
@@ -32,7 +57,6 @@ def wczytaj_linie(s):
         buf += c
         if c == b"\n":
             return buf
-
 
 def zaloguj_sie(s, login):
     buf = b""
@@ -48,7 +72,6 @@ def zaloguj_sie(s, login):
                 logging.info('zaloguj_sie: zalogowany?')
                 return
 
-
 def main():
     logging.info('Bot się uruchamia, za 10s nawiąże połączenie...')
     time.sleep(10.0)
@@ -61,6 +84,14 @@ def main():
     ostatnio_wyslano_propagacje = None
     ostatnio_wyslano_statystyke = None
     time.sleep(30)
+    logging.info('Sprawdzam czy plik logow istnieje')
+    sprawdz_czy_plik_statystyk_istnieje(plik_z_statystykami)
+    logging.info('Wczytuje slownik z pliku')
+    znaki_statystyka = odczytaj_statystyke_z_pliku(plik_z_statystykami)
+    logging.info('Slownik :')
+    logging.info(znaki_statystyka)
+    czas = datetime.datetime.utcnow()
+    ostatnio_wyslano_statystyke = czas.month
     while True:
         linia = wczytaj_linie(s)
         msg = linia.decode('utf8', 'ignore').strip()
@@ -72,6 +103,7 @@ def main():
         czas = datetime.datetime.utcnow()
         if czas.month != ostatnio_wyslano_statystyke:
             znaki_statystyka.clear()
+            zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
             ostatnio_wyslano_statystyke = czas.month
         if (
             czas.hour == 6
@@ -114,9 +146,11 @@ def main():
         if znaleziono:
             if znak in znaki_statystyka:
                 znaki_statystyka[znak] = znaki_statystyka[znak] +1
+                zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
                 logging.info('main(): Plus 1 do statystuki dla : %r', znak)
             else:
                 znaki_statystyka[znak] = 1
+                zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
                 logging.info('main(): Pierwszy hit dla : %r', znak)
 
             if znak in znaki_do_sprawdzenia:
