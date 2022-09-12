@@ -7,22 +7,50 @@ import socket
 import time
 import io
 import signal
-
+import ast
 import telegram
 import requests
+import os
 
 
 CHAT_ID = -1001510902119
+CHAT_ID_2 = -1001781769718
 WZORCE = [
     "3565",
 ]
+prefixy = ["SP","SN","SO","SQ","3Z"]
+wyjatki = ["F4VSQ","HB9EGA"]
 znaki_do_sprawdzenia = {}
 znaki_statystyka = {}
+plik_z_statystykami ="/tmp/slownik/slownik.txt"
 staty = ""
 @atexit.register
+
+def sprawdz_czy_plik_statystyk_istnieje(plik_do_sprawdzenia):
+    if os.path.isfile(plik_do_sprawdzenia):
+        logging.info('Plik istnieje')
+        pass
+    else:
+        logging.info('Plik nie istnieje, tworze !')
+        plik = open(plik_do_sprawdzenia, "w")
+        plik.write("{}")
+        plik.close()
+
+def zapisz_statystyke_do_pliku(slownik,plik):
+    with open(plik,"w") as file:
+      file.write(str(slownik))
+
+def odczytaj_statystyke_z_pliku(plik):
+    #slownik = {}
+    #zawartosc = ""
+    file = open(plik, "r")
+    zawartosc = file.read()
+    slownik = ast.literal_eval(zawartosc)
+    file.close()
+    return slownik
+
 def odczekaj_minute_przed_wyjsciem(*args, **kwargs):
     time.sleep(60.0)
-
 
 def wczytaj_linie(s):
     buf = b""
@@ -31,7 +59,6 @@ def wczytaj_linie(s):
         buf += c
         if c == b"\n":
             return buf
-
 
 def zaloguj_sie(s, login):
     buf = b""
@@ -47,7 +74,6 @@ def zaloguj_sie(s, login):
                 logging.info('zaloguj_sie: zalogowany?')
                 return
 
-
 def main():
     logging.info('Bot się uruchamia, za 10s nawiąże połączenie...')
     time.sleep(10.0)
@@ -60,6 +86,14 @@ def main():
     ostatnio_wyslano_propagacje = None
     ostatnio_wyslano_statystyke = None
     time.sleep(30)
+    logging.info('Sprawdzam czy plik logow istnieje')
+    sprawdz_czy_plik_statystyk_istnieje(plik_z_statystykami)
+    logging.info('Wczytuje slownik z pliku')
+    znaki_statystyka = odczytaj_statystyke_z_pliku(plik_z_statystykami)
+    logging.info('Slownik :')
+    logging.info(znaki_statystyka)
+    czas = datetime.datetime.utcnow()
+    ostatnio_wyslano_statystyke = czas.month
     while True:
         linia = wczytaj_linie(s)
         msg = linia.decode('utf8', 'ignore').strip()
@@ -71,6 +105,7 @@ def main():
         czas = datetime.datetime.utcnow()
         if czas.month != ostatnio_wyslano_statystyke:
             znaki_statystyka.clear()
+            zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
             ostatnio_wyslano_statystyke = czas.month
         if (
             czas.hour == 6
@@ -85,14 +120,35 @@ def main():
             ).content
             bot.send_message(chat_id=CHAT_ID, text="Dzień dobry, warunki na dziś:")
             bot.send_photo(chat_id=CHAT_ID, photo=io.BytesIO(content))
+
+            posortowane = sorted(znaki_statystyka.items(),key=lambda x:x[1],reverse=True)
+            slownik_posortowany = {}
+            for i in posortowane:
+                #print(i[0], i[1])
+                slownik_posortowany[i[0]] = i[1]
+            slownik_posortowany_usun_szum = {}
+            for i in slownik_posortowany:
+                if slownik_posortowany[i] > 30:
+                    slownik_posortowany_usun_szum[i] = slownik_posortowany[i]
             staty = ""
-            for x in znaki_statystyka:
-                statystyka = str(x) + " : " + str(znaki_statystyka[x]) + " razy" +"\n"
-                staty = staty + statystyka
+            for x in slownik_posortowany_usun_szum:
+                part = x[:2]
+                sp = False
+                exception = False
+                for i in prefixy:
+                    if part == i:
+                        sp = True
+                for i in wyjatki:
+                    if i == x:
+                        exception = True
+                if sp or exception:
+                    statystyka = str(x) + " : " + str(slownik_posortowany_usun_szum[x]) + " razy" + "\n"
+                    staty = staty + statystyka
             time.sleep(5)
-            bot.send_message(chat_id=CHAT_ID, text="Bot słyszał stacje w tym miesiącu:")
-            bot.send_message(chat_id=CHAT_ID, text=staty)
-            time.sleep(5.0)
+            if staty:
+                bot.send_message(chat_id=CHAT_ID, text="Stacje SP słyszane stacje w tym miesiącu:")
+                bot.send_message(chat_id=CHAT_ID, text=staty)
+                time.sleep(5.0)
         znaleziono = False
         znaleziono_znak = False
         for wzorzec in WZORCE:
@@ -102,9 +158,11 @@ def main():
         if znaleziono:
             if znak in znaki_statystyka:
                 znaki_statystyka[znak] = znaki_statystyka[znak] +1
+                zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
                 logging.info('main(): Plus 1 do statystuki dla : %r', znak)
             else:
                 znaki_statystyka[znak] = 1
+                zapisz_statystyke_do_pliku(znaki_statystyka,plik_z_statystykami)
                 logging.info('main(): Pierwszy hit dla : %r', znak)
 
             if znak in znaki_do_sprawdzenia:
@@ -126,7 +184,7 @@ def main():
 
         if msg and znaleziono and znaleziono_znak:
             logging.info('main(): publikuje linie: %r', linia)
-            bot.send_message(chat_id=CHAT_ID, text=msg)
+            bot.send_message(chat_id=CHAT_ID_2, text=msg)
             time.sleep(5.0)
         #else:
         #    logging.info('main(): odrzucam linie: %r', linia)
