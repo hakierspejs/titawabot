@@ -18,6 +18,8 @@ CHAT_ID_2 = -1001781769718
 WZORCE = [
     "3565",
 ]
+prefixy = ["SP","SN","SO","SQ","3Z"]
+wyjatki = ["F4VSQ","HB9EGA"]
 znaki_do_sprawdzenia = {}
 znaki_statystyka = {}
 plik_z_statystykami ="/tmp/slownik/slownik.txt"
@@ -130,11 +132,21 @@ def main():
                     slownik_posortowany_usun_szum[i] = slownik_posortowany[i]
             staty = ""
             for x in slownik_posortowany_usun_szum:
-                statystyka = str(x) + " : " + str(slownik_posortowany_usun_szum[x]) + " razy" +"\n"
-                staty = staty + statystyka
+                part = x[:2]
+                sp = False
+                exception = False
+                for i in prefixy:
+                    if part == i:
+                        sp = True
+                for i in wyjatki:
+                    if i == x:
+                        exception = True
+                if sp or exception:
+                    statystyka = str(x) + " : " + str(slownik_posortowany_usun_szum[x]) + " razy" + "\n"
+                    staty = staty + statystyka
             time.sleep(5)
             if staty:
-                bot.send_message(chat_id=CHAT_ID, text="Bot słyszał stacje w tym miesiącu:")
+                bot.send_message(chat_id=CHAT_ID, text="Stacje SP słyszane stacje w tym miesiącu:")
                 bot.send_message(chat_id=CHAT_ID, text=staty)
                 time.sleep(5.0)
         znaleziono = False
