@@ -24,7 +24,10 @@ znaki_do_sprawdzenia = {}
 znaki_statystyka = {}
 plik_z_statystykami ="/tmp/slownik/slownik.txt"
 staty = ""
+
 @atexit.register
+def odczekaj_minute_przed_wyjsciem():
+    time.sleep(60.0)
 
 def sprawdz_czy_plik_statystyk_istnieje(plik_do_sprawdzenia):
     if os.path.isfile(plik_do_sprawdzenia):
@@ -48,9 +51,6 @@ def odczytaj_statystyke_z_pliku(plik):
     slownik = ast.literal_eval(zawartosc)
     file.close()
     return slownik
-
-def odczekaj_minute_przed_wyjsciem(*args, **kwargs):
-    time.sleep(60.0)
 
 def wczytaj_linie(s):
     buf = b""
