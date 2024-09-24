@@ -83,6 +83,8 @@ def main():
     s.connect(("telnet.reversebeacon.net", 7000))
     zaloguj_sie(s, "SP7KZK")
     bot = telegram.Bot(open("api_key.txt").read().strip())
+    bot.send_message(chat_id=CHAT_ID, text="Bot się uruchamia")
+    bot.send_message(chat_id=CHAT_ID_2, text="Bot się uruchamia")
     ostatnio_wyslano_propagacje = None
     ostatnio_wyslano_statystyke = None
     time.sleep(30)
