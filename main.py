@@ -13,6 +13,9 @@ import requests
 import os
 
 
+REVERSEBEACON_URL = "telnet.reversebeacon.net"
+REVERSEBEACON_PORT = 7000
+REVERSEBEACON_LOGIN = "SP7KZK"
 CHAT_ID = -1001510902119
 CHAT_ID_2 = -1001781769718
 WZORCE = [
@@ -55,15 +58,49 @@ def odczytaj_statystyke_z_pliku(plik):
 def wczytaj_linie(s):
     buf = b""
     while True:
-        c = s.recv(1)
+        try:
+            c = s.recv(1)
+        except socket.timeout:
+            logging.warning('wczytaj_linie: Socket timeout')
+            return None
+        except socket.error as e:
+            logging.error('wczytaj_linie: Socket error: %s', e)
+            return None
+        except Exception as e:
+            logging.error(f'wczytaj_linie: Unexpected error: {e}')
+            return None
+            
+        if not c:
+            logging.warning('wczytaj_linie: Connection closed')
+            return None
         buf += c
         if c == b"\n":
             return buf
 
+def utworz_socket():
+    s = socket.socket()
+    s.settimeout(60)
+    s.connect((REVERSEBEACON_URL, REVERSEBEACON_PORT))
+    return s
+
 def zaloguj_sie(s, login):
     buf = b""
     while True:
-        c = s.recv(1)
+        try:
+            c = s.recv(1)
+        except socket.timeout:
+            logging.warning('zaloguj_sie: Socket timeout')
+            return None
+        except socket.error as e:
+            logging.error(f'zaloguj_sie: Socket error: {e}')
+            return None
+        except Exception as e:
+            logging.error(f'zaloguj_sie: Unexpected error: {e}')
+            return None
+            
+        if not c:
+            logging.warning('zaloguj_sie: Connection closed')
+            return None
         buf += c
         if c == b"\n":
             logging.debug('zaloguj_sie: odrzucam linię: %r', buf)
@@ -72,16 +109,23 @@ def zaloguj_sie(s, login):
             if buf == b"Please enter your call:":
                 s.send(login.encode() + b"\r\n")
                 logging.info('zaloguj_sie: zalogowany?')
-                return
+                return True
+
+def utworz_socket_i_zaloguj_sie():
+    while True:
+        s = utworz_socket()
+        r = zaloguj_sie(s, REVERSEBEACON_LOGIN)
+        if r:
+            return s
+        s.close()
+        logging.warning('utworz_socket_i_zaloguj_sie: próbuję ponownie...')
+        time.sleep(5)
 
 def main():
     logging.info('Bot się uruchamia, za 10s nawiąże połączenie...')
     time.sleep(10.0)
     signal.alarm(60 * 60)
-    s = socket.socket()
-    s.settimeout(60)
-    s.connect(("telnet.reversebeacon.net", 7000))
-    zaloguj_sie(s, "SP7KZK")
+    s = utworz_socket_i_zaloguj_sie()
     bot = telegram.Bot(open("api_key.txt").read().strip())
     bot.send_message(chat_id=CHAT_ID, text="Bot się uruchamia")
     bot.send_message(chat_id=CHAT_ID_2, text="Bot się uruchamia")
@@ -98,6 +142,15 @@ def main():
     ostatnio_wyslano_statystyke = czas.month
     while True:
         linia = wczytaj_linie(s)
+        
+        if linia is None:
+            s.close()
+            logging.info('Próbuję połączyć się ponownie...')
+            time.sleep(5)
+            s = utworz_socket_i_zaloguj_sie()
+            logging.info('Połączono ponownie')
+            continue
+
         msg = linia.decode('utf8', 'ignore').strip()
         msg_split = msg.split()
         try:
